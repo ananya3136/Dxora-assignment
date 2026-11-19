@@ -34,6 +34,15 @@ def parse_url(value: str) -> httpx.URL:
         raise WebsiteError(422, "Provide a public HTTP or HTTPS URL using its default port.") from exc
 
 
+def is_public(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    if isinstance(ip, ipaddress.IPv6Address):
+        if ip.ipv4_mapped:
+            return is_public(ip.ipv4_mapped)
+        if ip.is_site_local or ip.sixtofour or ip.teredo:
+            return False
+    return ip.is_global and not ip.is_multicast and not ip.is_reserved
+
+
 async def public_address(url: httpx.URL) -> str:
     host = url.raw_host.decode("ascii")
     try:
@@ -44,12 +53,7 @@ async def public_address(url: httpx.URL) -> str:
     except OSError as exc:
         raise WebsiteError(502, "The website hostname could not be resolved.") from exc
     ips = list(dict.fromkeys(ipaddress.ip_address(result[4][0]) for result in addresses))
-    if not ips or any(
-        not (ip.ipv4_mapped or ip).is_global or (ip.ipv4_mapped or ip).is_multicast
-        if isinstance(ip, ipaddress.IPv6Address)
-        else not ip.is_global or ip.is_multicast
-        for ip in ips
-    ):
+    if not ips or any(not is_public(ip) for ip in ips):
         raise WebsiteError(422, "The URL must resolve exclusively to public addresses.")
     return str(next((ip for ip in ips if ip.version == 4), ips[0]))
 

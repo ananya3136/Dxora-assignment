@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "website": "https://example.com",
+  "analyzed_page": "https://example.com/",
+  "brand": {
+    "name": "Harbor Bike Repair",
+    "category": "Bicycle repair",
+    "summary": "A fictional workshop offering bicycle maintenance."
+  },
+  "analysis": {
+    "competitor_analysis": {
+      "brand_overview": "A repair workshop serving daily riders.",
+      "main_offerings": ["Brake adjustments"],
+      "competitors": [],
+      "strengths": ["Clear explanation of brake service"],
+      "opportunities": ["Publish inspection and turnaround details"]
+    },
+    "target_search_queries": [
+      {"query": "bike brake repair near me", "platforms": ["Google"], "intent": "Local service", "business_relevance": "Find brake repairs", "target_audience": "Daily riders"},
+      {"query": "local bicycle repair workshop", "platforms": ["Facebook"], "intent": "Community recommendation", "business_relevance": "Find nearby repair shops", "target_audience": "Neighborhood cyclists"},
+      {"query": "bike brake tune up tips", "platforms": ["Instagram"], "intent": "Maintenance advice", "business_relevance": "Discover brake service", "target_audience": "Recreational riders"},
+      {"query": "bike fleet brake maintenance", "platforms": ["LinkedIn"], "intent": "Vendor discovery", "business_relevance": "Explore recurring repairs", "target_audience": "Fleet operators"},
+      {"query": "recommend a bike brake mechanic", "platforms": ["X"], "intent": "Peer referrals", "business_relevance": "Find repair recommendations", "target_audience": "Cycling commuters"}
+    ],
+    "seo_improvements": {
+      "primary_keyword": "bike brake repair",
+      "secondary_keywords": ["bicycle repair"],
+      "long_tail_keywords": ["bike brake adjustment service"],
+      "business_keywords": ["bicycle maintenance workshop"],
+      "recommended_title": "Bike Brake Repair | Harbor Bike Repair",
+      "title_structure": "Service followed by brand",
+      "meta_description": "Get your bicycle brakes adjusted at Harbor Bike Repair. Learn what the workshop checks and how to book a service.",
+      "meta_keywords": ["bike brake repair"],
+      "supporting_content": ["A brake adjustment page that explains inspection, booking and turnaround."]
+    },
+    "top_services": [
+      {"name": "Brake adjustments", "description": "Adjust bicycle brakes.", "target_industry": "Cycling", "target_customer": "Daily riders", "main_benefit": "More responsive braking", "status": "observed", "evidence": "We offer brake adjustments for daily riders."}
+    ],
+    "target_audience": {
+      "primary_audience": ["Daily riders"], "secondary_audience": ["Recreational riders"],
+      "industries": ["Cycling"], "business_types": [], "customer_profiles": ["Cycling commuters"],
+      "geography": [], "customer_needs": ["Responsive brakes"],
+      "customer_interests": ["Bicycle maintenance"], "marketing_segments": ["Daily bike commuters"]
+    }
+  },
+  "evidence_limitations": ["Fictional fixture with one observed service and no competitor or geography evidence."]
+}

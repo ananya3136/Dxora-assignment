@@ -1,0 +1,13 @@
+Offline FastAPI and Gemini contract verification (mock provider)
+test_structured_payload_and_evidence_checks (test_link_analysis.GeminiContractTests.test_structured_payload_and_evidence_checks) ... ok
+test_full_endpoint (test_link_analysis.LinkAnalysisTests.test_full_endpoint) ... ok
+test_invalid_url_and_missing_body (test_link_analysis.LinkAnalysisTests.test_invalid_url_and_missing_body) ... ok
+test_openapi (test_link_analysis.LinkAnalysisTests.test_openapi) ... ok
+test_website_and_provider_errors (test_link_analysis.LinkAnalysisTests.test_website_and_provider_errors) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.871s
+
+OK
+
+Live website smoke test: https://www.python.org/ | Welcome to Python.org | 2057 evidence characters

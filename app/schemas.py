@@ -1,8 +1,8 @@
 """The public response contract and the model's structured output."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, WithJsonSchema, model_validator
 
 Platform = Literal["Google", "Facebook", "Instagram", "LinkedIn", "X"]
 
@@ -22,7 +22,10 @@ class Competitor(BaseModel):
     comparison_basis: str
     possible_strengths: list[str]
     possible_gaps: list[str]
-    status: Literal["ai_suggestion"]
+    status: Annotated[
+        Literal["ai_suggestion"],
+        WithJsonSchema({"type": "string", "enum": ["ai_suggestion"]}),
+    ]
 
 
 class Competition(BaseModel):
@@ -84,8 +87,9 @@ class Analysis(BaseModel):
 
     @model_validator(mode="after")
     def validate_queries(self):
-        if len({item.query.strip().casefold() for item in self.target_search_queries}) != 5:
-            raise ValueError("Five distinct queries are required.")
+        queries = {item.query.strip().casefold() for item in self.target_search_queries}
+        if "" in queries or len(queries) != 5:
+            raise ValueError("Five distinct, nonempty queries are required.")
         platforms = {platform for item in self.target_search_queries for platform in item.platforms}
         if platforms != {"Google", "Facebook", "Instagram", "LinkedIn", "X"}:
             raise ValueError("Queries must cover all five platforms.")
