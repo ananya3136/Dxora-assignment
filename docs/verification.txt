@@ -11,3 +11,9 @@ Ran 5 tests in 0.871s
 OK
 
 Live website smoke test: https://www.python.org/ | Welcome to Python.org | 2057 evidence characters
+
+Live local API smoke checks for version 1.1.0 (19 November 2026)
+POST /link-analysis with example.com: HTTP 200, five analysis sections (7.0 s)
+POST /link-analysis with Shopify homepage: HTTP 200, five sections, four offerings with cited excerpts (9.9 s)
+POST /link-analysis with Metacritic GTA V: HTTP 200, five sections (14.6 s)
+Wall times are single end-to-end observations, not provider benchmarks.

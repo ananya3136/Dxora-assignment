@@ -11,7 +11,7 @@ from app import llm, website
 from app.schemas import Request, Response
 
 load_dotenv()
-app = FastAPI(title="Website Link Analysis", version="1.0.0")
+app = FastAPI(title="Website Link Analysis", version="1.1.0")
 
 
 def error(status: int, message: str) -> JSONResponse:

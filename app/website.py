@@ -2,13 +2,26 @@
 
 import asyncio
 import ipaddress
+import re
 import socket
+from itertools import chain
 from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
 
 MAX_BYTES = 4_000_000
+MAX_EVIDENCE_CHARS = 14_000
+BUSINESS_TERMS = re.compile(
+    r"\b(?:services?|solutions?|products?|features?|plans?|pricing|industr(?:y|ies)|"
+    r"customers?|teams?|business(?:es)?|specializ\w*|offers?|provid\w*|serving)\b",
+    re.IGNORECASE,
+)
+BOILERPLATE = re.compile(
+    r"^(?:cookie (?:policy|settings|preferences)|accept all(?: cookies)?|privacy policy|"
+    r"terms (?:of use|of service)|all rights reserved|sign in|learn more|read more)(?:\W|$)",
+    re.IGNORECASE,
+)
 
 
 class WebsiteError(Exception):
@@ -111,14 +124,38 @@ def extract_evidence(html: str) -> dict:
         if tag and tag.get("content"):
             metadata[key] = tag["content"][:500]
 
-    for element in soup.select("script, style, noscript, template, nav, footer, svg, [hidden]"):
+    for element in soup.select(
+        "script, style, noscript, template, nav, footer, svg, [hidden], [aria-hidden=true]"
+    ):
         element.decompose()
 
     root = soup.find("main") or soup.find(attrs={"role": "main"}) or soup.body or soup
     headings = list(dict.fromkeys(tag.get_text(" ", strip=True)[:200]
                                   for tag in root.select("h1,h2,h3")))[:30]
-    lines = (" ".join(line.split()) for line in root.stripped_strings)
-    body = "\n".join(dict.fromkeys(line for line in lines if line))[:14_000]
+    structured = root.select("h1,h2,h3,p,li,dt,dd,blockquote")
+    covered = {id(node) for block in structured for node in block.strings}
+    other_text = (str(node) for node in root.strings if id(node) not in covered)
+    candidates = {}
+    for block in chain(structured, other_text):
+        tag = getattr(block, "name", None)
+        raw = block.get_text(" ", strip=True) if tag else block
+        candidate = " ".join(raw.split())[:1000]
+        if len(candidate) < 8 or BOILERPLATE.match(candidate):
+            continue
+        key = candidate.casefold()
+        score = 4 * min(3, len(set(BUSINESS_TERMS.findall(key))))
+        score += {"h1": 10, "h2": 7, "h3": 5, "p": 3}.get(tag, 0)
+        score += 2 if 45 <= len(candidate) <= 500 else 0
+        if key not in candidates or score > candidates[key][0]:
+            candidates[key] = (score, candidate)
+
+    remaining = MAX_EVIDENCE_CHARS
+    excerpts = []
+    for _, candidate in sorted(candidates.values(), key=lambda item: -item[0]):
+        if len(candidate) + 1 <= remaining:
+            excerpts.append(candidate)
+            remaining -= len(candidate) + 1
+    body = "\n".join(excerpts)
     description = metadata.get("og:description") or metadata.get("description", "")
     video_page = metadata.get("og:type", "").split(".")[0] == "video"
     if video_page or len(body) < 40:
@@ -130,4 +167,5 @@ def extract_evidence(html: str) -> dict:
             raise WebsiteError(422, "The video page had too little descriptive metadata to analyze.")
     if len(body) < 40:
         raise WebsiteError(422, "The page had too little readable content to analyze.")
-    return {"metadata": metadata, "headings": headings, "body": body}
+    return {"metadata": metadata, "headings": headings, "body": body,
+            "evidence_scope": "ranked_html"}

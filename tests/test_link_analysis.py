@@ -21,6 +21,20 @@ HTML = """
 
 
 class LinkAnalysisTests(unittest.TestCase):
+    def test_ranking_keeps_late_business_content_within_budget(self):
+        opening = "".join(f"<p>Editorial note {i}: {'background ' * 50}</p>" for i in range(40))
+        evidence = website.extract_evidence(
+            f"<main>{opening}<p>We provide payroll services for small businesses.</p></main>"
+        )
+        self.assertTrue(evidence["body"].startswith("We provide payroll services"))
+        self.assertLessEqual(len(evidence["body"]), website.MAX_EVIDENCE_CHARS)
+
+    def test_ranking_includes_text_outside_semantic_elements(self):
+        evidence = website.extract_evidence(
+            "<main><h1>Acme</h1><div>We provide payroll services for small businesses.</div></main>"
+        )
+        self.assertIn("payroll services", evidence["body"])
+
     def test_video_evidence_uses_metadata_instead_of_host_boilerplate(self):
         evidence = website.extract_evidence("""
             <meta property="og:type" content="video.other">
@@ -72,10 +86,8 @@ class LinkAnalysisTests(unittest.TestCase):
 
 class GeminiContractTests(unittest.IsolatedAsyncioTestCase):
     async def test_structured_payload_and_evidence_checks(self):
-        for excerpt, expected_status in (
-            ("We offer brake adjustments for daily riders.", None),
-            ("We rent electric bikes.", 502),
-        ):
+        evidence = website.extract_evidence(HTML)
+        for excerpt in ("E2", "E999"):
             with self.subTest(excerpt=excerpt):
                 provider_result = ModelResult.model_validate(SAMPLE)
                 provider_result.analysis.top_services[0].evidence = excerpt
@@ -85,7 +97,9 @@ class GeminiContractTests(unittest.IsolatedAsyncioTestCase):
                     schema = payload["generationConfig"]["responseJsonSchema"]
                     self.assertEqual(schema["$defs"]["Competitor"]["properties"]["status"]["enum"],
                                      ["ai_suggestion"])
-                    self.assertIn("brake adjustments", payload["contents"][0]["parts"][0]["text"])
+                    context = json.loads(payload["contents"][0]["parts"][0]["text"])
+                    self.assertEqual(context["excerpts"]["E2"],
+                                     "We offer brake adjustments for daily riders.")
                     return httpx.Response(200, json={"candidates": [{
                         "finishReason": "STOP",
                         "content": {"parts": [{"text": provider_result.model_dump_json()}]},
@@ -95,10 +109,36 @@ class GeminiContractTests(unittest.IsolatedAsyncioTestCase):
                 with patch.dict("os.environ", {"GEMINI_API_KEY": "test-fixture-key"}), patch(
                     "app.llm.httpx.AsyncClient", return_value=client
                 ):
-                    if expected_status:
-                        with self.assertRaises(llm.ModelError) as error:
-                            await llm.analyze(website.extract_evidence(HTML))
-                        self.assertEqual(error.exception.status, expected_status)
+                    result = await llm.analyze(evidence)
+                    self.assertEqual(result.brand.name, "Harbor Bike Repair")
+                    if excerpt == "E999":
+                        self.assertEqual(result.analysis.top_services, [])
+                        self.assertIn("Omitted 1", result.evidence_limitations[-1])
                     else:
-                        result = await llm.analyze(website.extract_evidence(HTML))
-                        self.assertEqual(result.brand.name, "Harbor Bike Repair")
+                        self.assertEqual(result.analysis.top_services[0].evidence,
+                                         "We offer brake adjustments for daily riders.")
+
+    async def test_model_routes_and_falls_back_after_malformed_output(self):
+        evidence = website.extract_evidence(HTML)
+        models = []
+        expected = ModelResult.model_validate(SAMPLE)
+
+        async def generate(_client, _key, model, _payload):
+            models.append(model)
+            if len(models) == 1:
+                raise ValueError("Incomplete generation")
+            return expected
+
+        with (
+            patch.dict("os.environ", {
+                "GEMINI_API_KEY": "test-fixture-key",
+                "GEMINI_MODEL": "standard",
+                "GEMINI_FALLBACK_MODEL": "enhanced",
+            }),
+            patch("app.llm.generate", AsyncMock(side_effect=generate)),
+        ):
+            self.assertEqual(llm.model_order(evidence), ("standard", "enhanced"))
+            evidence["metadata"]["og:type"] = "product"
+            self.assertEqual(llm.model_order(evidence), ("enhanced", "standard"))
+            self.assertEqual((await llm.analyze(evidence)).brand.name, "Harbor Bike Repair")
+        self.assertEqual(models, ["enhanced", "standard"])
