@@ -2,6 +2,13 @@
 
 Submit a publicly reachable HTML page to generate a brand and competitor comparison, five search queries, SEO improvements, up to five important offerings, and audience segments.
 
+
+Demo Responses : 
+<img width="1917" height="907" alt="image" src="https://github.com/user-attachments/assets/77467fbc-2a76-4512-af14-62a241f0ff31" />
+<img width="711" height="371" alt="image" src="https://github.com/user-attachments/assets/8f196ad1-a62a-4a62-9e99-48139e0df67a" />
+
+
+
 ## Submission
 
 | Deliverable | Location |
