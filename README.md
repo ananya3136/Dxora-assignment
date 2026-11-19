@@ -47,7 +47,7 @@ Errors from the application use `{"success":false,"error":"..."}`.
 3. Gemini gets numbered evidence excerpts and a JSON schema for all five sections. Pydantic checks the result and platform coverage. The API resolves observed-offering references back to their source text and omits individual claims that cite missing evidence.
 4. The response exposes the analyzed page and limits of its evidence. Competitor comparisons are hypotheses labeled `ai_suggestion`. Audience segments are analysis or recommendations. Search queries are candidate phrases. Single-page HTML extraction works best on public server-rendered pages and may have limited evidence on client-rendered or access-restricted pages.
 
-## Model selection
+## Model selection & Requirement based Model Routing for cost optimization
 
 On-demand standard API prices in USD per million tokens, as listed by the providers on 19 November 2026. The example calculation uses 6,000 input tokens and 2,000 billable output tokens for each model, excluding additional provider features. Actual tokens vary by page, model and tokenizer.
 
