@@ -5,7 +5,7 @@ Submit a publicly reachable HTML page to generate a brand and competitor compari
 
 Demo Responses : 
 <img width="1917" height="907" alt="image" src="https://github.com/user-attachments/assets/77467fbc-2a76-4512-af14-62a241f0ff31" />
-<img width="711" height="371" alt="image" src="https://github.com/user-attachments/assets/8f196ad1-a62a-4a62-9e99-48139e0df67a" />
+<img width="971" height="507" alt="image" src="https://github.com/user-attachments/assets/b32b055a-2cc4-440b-8c17-b041a0cb016c" />
 
 
 
