@@ -43,7 +43,7 @@ Errors from the application use `{"success":false,"error":"..."}`.
 ## Architecture
 
 1. FastAPI validates the request format. The fetcher resolves the host to public addresses, connects to a checked IP while preserving the HTTP Host and TLS server name, and repeats the checks at every redirect.
-2. The HTML parser extracts title, metadata, headings and main-page text. It drops navigation, scripts and duplicate text. The fetch stage has a 12-second budget, a 1 MB response cap, and a 14,000-character body context cap.
+2. The HTML parser extracts title, metadata, headings and main-page text. It drops navigation, scripts and duplicate text. The fetch stage has a 12-second budget, a 4 MB response cap, and a 14,000-character body context cap. Video pages and pages with little readable text can use descriptive metadata as evidence.
 3. A single Gemini request receives that evidence and a JSON schema for all five sections. Pydantic then checks the result, verifies that five distinct queries collectively cover all five platforms, and looks for the exact supporting excerpt behind each observed offering.
 4. The response exposes the analyzed page and limits of its evidence. Competitor comparisons are hypotheses labeled `ai_suggestion`. Audience segments are analysis or recommendations. Search queries are candidate phrases. Single-page HTML extraction works best on public server-rendered pages and may have limited evidence on client-rendered or access-restricted pages.
 

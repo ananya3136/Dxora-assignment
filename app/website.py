@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 import httpx
 from bs4 import BeautifulSoup
 
-MAX_BYTES = 1_000_000
+MAX_BYTES = 4_000_000
 
 
 class WebsiteError(Exception):
@@ -106,7 +106,7 @@ def extract_evidence(html: str) -> dict:
     metadata = {}
     if soup.title:
         metadata["title"] = soup.title.get_text(" ", strip=True)[:300]
-    for key in ("description", "og:site_name", "og:description", "og:title"):
+    for key in ("description", "og:site_name", "og:description", "og:title", "og:type"):
         tag = soup.find("meta", attrs={"name": key}) or soup.find("meta", attrs={"property": key})
         if tag and tag.get("content"):
             metadata[key] = tag["content"][:500]
@@ -119,6 +119,15 @@ def extract_evidence(html: str) -> dict:
                                   for tag in root.select("h1,h2,h3")))[:30]
     lines = (" ".join(line.split()) for line in root.stripped_strings)
     body = "\n".join(dict.fromkeys(line for line in lines if line))[:14_000]
+    description = metadata.get("og:description") or metadata.get("description", "")
+    video_page = metadata.get("og:type", "").split(".")[0] == "video"
+    if video_page or len(body) < 40:
+        if len(description.strip()) >= 40:
+            title = metadata.get("og:title") or metadata.get("title", "")
+            return {"metadata": metadata, "headings": [], "body": f"{title}\n{description}",
+                    "evidence_scope": "page_metadata"}
+        if video_page:
+            raise WebsiteError(422, "The video page had too little descriptive metadata to analyze.")
     if len(body) < 40:
         raise WebsiteError(422, "The page had too little readable content to analyze.")
     return {"metadata": metadata, "headings": headings, "body": body}

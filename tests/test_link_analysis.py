@@ -21,6 +21,17 @@ HTML = """
 
 
 class LinkAnalysisTests(unittest.TestCase):
+    def test_video_evidence_uses_metadata_instead_of_host_boilerplate(self):
+        evidence = website.extract_evidence("""
+            <meta property="og:type" content="video.other">
+            <meta property="og:title" content="Brake repair walkthrough">
+            <meta property="og:description" content="A mechanic demonstrates how to adjust bicycle brakes for daily riding.">
+            <body>About Press Copyright Contact Creators Privacy Policy</body>
+        """)
+        self.assertEqual(evidence["evidence_scope"], "page_metadata")
+        self.assertIn("adjust bicycle brakes", evidence["body"])
+        self.assertNotIn("Copyright", evidence["body"])
+
     def test_full_endpoint(self):
         with (
             patch("app.website.fetch_html", AsyncMock(return_value=(SAMPLE["analyzed_page"], HTML))),
